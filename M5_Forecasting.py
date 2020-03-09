@@ -2,7 +2,7 @@
 
 import PreProcess as pre;
 import Visualization as visual;
-import cSalesTrainValidation as saleData;
+import SalesData as saleData;
 
 #owing to the fact that so many factors affect the sales on a given day. On certain days, the sales quantity is 0, which indicates that a certain product may not be available on that day (as noted by Rob in his kernel).
 
@@ -28,14 +28,15 @@ import cSalesTrainValidation as saleData;
 
 
 
-path = "Data/"
+data_path = "Data/"
+out_path = "Output/"
 
 #-------------------------------------------------------------------------------------
 def main():   
     print("Main...")
 
-    data = saleData.cSalesData(path)
-    data.save_summary("sale_summary.csv")
+    data = saleData.cSalesData(data_path)
+    data.week_summary(out_path + "sale_summary.csv")
 
     #calendar, prices, sample_sub, sales_val_data = pre.load_data()
     #visual.compare_sales_date_range(calendar, sales_val_data, "FOODS_3_120_WI_1_validation", "d_1914", "d_1942")
