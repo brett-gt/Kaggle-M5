@@ -3,6 +3,12 @@ YEARS = [2011, 2012, 2013, 2014, 2015]
 
 DATE_FORMAT = "%Y-%m-%d"
 
+DAYS_OF_WEEK = ["Saturday","Sunday","Monday","Tuesday","Wednesday","Thursday","Friday"]
+WEEKDAYS = ["Monday","Tuesday","Wednesday","Thursday","Friday"]
+WEEKEND = ["Saturday","Sunday"]
+
+WEEK_SEARCH = ["Saturday","Sunday","Monday","Tuesday","Wednesday","Thursday","Friday", WEEKDAYS, WEEKEND]
+
 
 #--------------------------------------------------------------------------------
 def d_to_num(d_col):
