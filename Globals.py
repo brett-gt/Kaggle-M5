@@ -10,6 +10,12 @@ WEEKEND = ["Saturday","Sunday"]
 WEEK_SEARCH = ["Saturday","Sunday","Monday","Tuesday","Wednesday","Thursday","Friday", WEEKDAYS, WEEKEND]
 
 
+D_START_VAL = "d_1914"
+D_END_VAL = "d_1941"
+D_START_EVAL = "d_1942"
+D_END_EVAL = "d_1969"
+
+
 #--------------------------------------------------------------------------------
 def d_to_num(d_col):
     return int(d_col.split('_')[1])

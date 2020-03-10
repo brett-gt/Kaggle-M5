@@ -25,7 +25,6 @@ class cCalendar:
             result = self.data.loc[self.data['weekday'] == days].d
         elif(isinstance(days,list)):
             result = self.data.loc[self.data['weekday'].isin(days)].d
-        
 
         if(result.empty):
             return None
@@ -33,21 +32,21 @@ class cCalendar:
             return result.values
 
     #--------------------------------------------------------------------------------
-    def get_d_from_date(calendar, date):
+    def get_d_from_date(self, date):
         """ The common date identified is d_XXXX where XXXX is a numbered list from
             1 to 1969 (currently).  Use this function to get the d_XXXX that corresponds
             to a specific date.  Uses calendar dataframe (loaded from calendar.csv) for
             lookup.
 
             Arguments:
-                calendar - calendar dataframe (pre-loaded from calendar.csv)
                 date - (datetime) format year-month-day with 0 padding
 
             Returns:
                 string - d_XXXX or null if not found
         """  
-        print("\ncCalendar: get_d_from_date: Looking for " + str(date))
         result = self.data.loc[self.data['date']==date].d
+
+        print("\ncCalendar: get_d_from_date: Looking for " + str(date) + " is " + str(result))
 
         if(result.empty):
             return None
@@ -67,9 +66,10 @@ class cCalendar:
 
             Returns:
                 datetime - format year-month-day with 0 padding
-        """  
-        print("\ncCalendar: get_date_from_d: Looking for " + str(d))
+        """ 
         result = self.data.loc[calendar['d']==d].date
+
+        print("\ncCalendar: get_date_from_d: Looking for " + str(d) + " is " + str(result))
 
         if(result.empty):
             return None

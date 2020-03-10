@@ -21,18 +21,13 @@
     <EnableUnmanagedDebugging>false</EnableUnmanagedDebugging>
   </PropertyGroup>
   <ItemGroup>
+    <Compile Include="ARIMA.py">
+      <SubType>Code</SubType>
+    </Compile>
     <Compile Include="BasicForecasting.py">
       <SubType>Code</SubType>
     </Compile>
-    <Compile Include="cSalesTrainValidation.py">
-      <SubType>Code</SubType>
-    </Compile>
-    <Compile Include="DataEncoding.py">
-      <SubType>Code</SubType>
-    </Compile>
-    <Compile Include="DeepTF.py">
-      <SubType>Code</SubType>
-    </Compile>
+    <Compile Include="Calendar.py" />
     <Compile Include="Denoise.py">
       <SubType>Code</SubType>
     </Compile>
@@ -44,6 +39,10 @@
     </Compile>
     <Compile Include="M5_Forecasting.py" />
     <Compile Include="PreProcess.py">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="SalesData.py" />
+    <Compile Include="Stationary.py">
       <SubType>Code</SubType>
     </Compile>
     <Compile Include="Visualization.py">

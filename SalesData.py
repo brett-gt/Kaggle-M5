@@ -1,49 +1,114 @@
 import pandas as pd
+import numpy as np
+
 import Globals as globals
 import Calendar as calendar
 
+
 class cSalesData:
-    """description of class"""
-    sales = []
+    """Top level class to handle distribution of sales data.  
+    """
+    values = []
+    lookup = []
+
+    ID_COL = ['id']
+    LOOKUP_COL = ['item_id', 'dept_id', 'cat_id', 'store_id', 'state_id']
+    
 
     #----------------------------------------------------------------------------
     def __init__(self, path):
-        self.sales = pd.read_csv(path + "sales_train_validation.csv")
+        self.values = pd.read_csv(path + "sales_train_validation.csv")
+        self.d_cols = [c for c in self.values.columns if 'd_' in c]
+
+        self.lookup = self.values[self.ID_COL + self.LOOKUP_COL]
+        self.lookup = self.lookup.set_index(self.ID_COL)
+        
+        self.values = self.values.drop(self.LOOKUP_COL, axis=1)
+        self.values = self.values.set_index(self.ID_COL).T
+
         self.calendar = calendar.cCalendar(path)
-        #TODO: d_cols = [c for c in data.columns if 'd_' in c]
 
     #--------------------------------------------------------------------------------
-    def get_d_range(d_start, d_end, columns=True):
+    def get_date_range(self, date_start, date_end):
         """ Get a range of rows from a dataset using the d_XXXX value.
 
             Arguments:
                 data- dataset that contains a "d" column (d_XXXX)
-                d_start - first d_
-                d_end   - end _d
-                columns - the target is a dataframe that has columns named d_
+                d_start - first d_XXXX
+                d_end   - end d_XXXX
 
             Returns:
                 data frame
         """  
-        cols = self.sales.columns
+        d_start = self.calendar.get_d_from_date(date_start)
+        d_end = self.calendar.get_d_from_date(date_end)
+        return self.get_d_range(d_start, d_end)
 
-        if "d_1" not in cols:
+    #--------------------------------------------------------------------------------
+    def get_d_range(self, d_start, d_end):
+        """ Get a range of rows from a dataset using the d_XXXX value.
+
+            Arguments:
+                data- dataset that contains a "d" column (d_XXXX)
+                d_start - first d_XXXX
+                d_end   - end d_XXXX
+
+            Returns:
+                data frame
+        """  
+        if "d_1" not in self.d_cols:
             return None
-        if d_start not in cols:
+        if d_start not in self.d_cols:
             return None
-        if d_end not in cols:
+        if d_end not in self.d_cols:
             return None
 
-        first_d_col = sales.columns.get_loc("d_1")
-        d_first_col = sales.columns.get_loc(d_start)
-        d_end_col = sales.columns.get_loc(d_end) + 1
+        first_d_col = self.values.index.get_loc("d_1")
+        d_first_col = self.values.index.get_loc(d_start)
+        d_end_col = self.values.index.get_loc(d_end) + 1
 
-        result = sales.iloc[:, np.r_[0:first_d_col, d_first_col:d_end_col]]
+        result = self.values.iloc[np.r_[0:first_d_col, d_first_col:d_end_col],:]
+        print(result.head())
         return result
 
+    #--------------------------------------------------------------------------------
+    # TODO
+    def get_values_by_store(self):
+        d_cols = [c for c in self.sales.columns if 'd_' in c]
+        return self.sales.groupby(['store_id'])[d_cols].values[0]
+
+    #--------------------------------------------------------------------------------
+    # TODO
+    def get_values_by_state(self):
+
+        d_cols = [c for c in self.sales.columns if 'd_' in c]
+        return self.sales.groupby(['state_id'])
+
+    #--------------------------------------------------------------------------------
+    # TODO
+    def get_values_by_dept(self):
+        d_cols = [c for c in self.sales.columns if 'd_' in c]
+        return self.sales.groupby(['dept_id'])
+
+    #--------------------------------------------------------------------------------
+    # TODO
+    def get_values_by_item(self):
+        d_cols = [c for c in self.sales.columns if 'd_' in c]
+        return self.sales.groupby(['item_id'])
+
+    #----------------------------------------------------------------------------
+    def limit_d_cols(self, col_list):
+        """ Limit a list of d_XXXX columns to those found in the sales dataset
+            Useful since some of the other files include d_XXXX columns that will
+            only be present in the test data
+        """
+        c_set = set(col_list)
+        d_set = set(self.d_cols)
+        return c_set.intersection(d_set)
 
 
     #----------------------------------------------------------------------------
+    # TODO
     def basic_summary(self, filename):
         results = pd.DataFrame()
         results['id'] = self.sales['id']
@@ -53,12 +118,7 @@ class cSalesData:
         results.to_csv(filename)
 
     #----------------------------------------------------------------------------
-    def limit_d_cols(self, col_list):
-        c_set = set(col_list)
-        d_set = set([c for c in self.sales.columns if 'd_' in c])
-        return c_set.intersection(d_set)
-
-    #----------------------------------------------------------------------------
+    # TODO
     def week_summary(self, filename, days=globals.WEEK_SEARCH):
         results = pd.DataFrame()
         results['id'] = self.sales['id']
@@ -80,6 +140,7 @@ class cSalesData:
         results.to_csv(filename)
 
     #----------------------------------------------------------------------------
+    # TODO
     def create_summary(self, data, prefix = ""):
         d_cols = [c for c in data.columns if 'd_' in c]
         
