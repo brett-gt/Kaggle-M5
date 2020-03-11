@@ -2,17 +2,12 @@
 import pywt
 from statsmodels.robust import mad
 
+
+
+
 ##################################################################################
 # Denoising techniques
 ##################################################################################
-
-#---------------------------------------------------------------------------------
-def sub_rolling_mean(data):
-    df_log = np.log(data)
-    rolling_mean = df_log.rolling(window=12).mean()
-    df_log_minus_mean = df_log - rolling_mean
-    return df_log_minus_mean.dropna(inplace=True)
-
 #---------------------------------------------------------------------------------
 def mean_absolute_deviation(data, axis=None):
     """ Mean absolute deviation describes the randomnass in a signal

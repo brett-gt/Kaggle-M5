@@ -8,7 +8,7 @@ import Calendar as calendar
 class cSalesData:
     """Top level class to handle distribution of sales data.  
     """
-    values = []
+    sales = []
     lookup = []
 
     ID_COL = ['id']
@@ -17,16 +17,31 @@ class cSalesData:
 
     #----------------------------------------------------------------------------
     def __init__(self, path):
-        self.values = pd.read_csv(path + "sales_train_validation.csv")
-        self.d_cols = [c for c in self.values.columns if 'd_' in c]
+        self.sales = pd.read_csv(path + "sales_train_validation.csv")
+        self.d_cols = [c for c in self.sales.columns if 'd_' in c]
 
-        self.lookup = self.values[self.ID_COL + self.LOOKUP_COL]
+        self.lookup = self.sales[self.ID_COL + self.LOOKUP_COL]
         self.lookup = self.lookup.set_index(self.ID_COL)
         
-        self.values = self.values.drop(self.LOOKUP_COL, axis=1)
-        self.values = self.values.set_index(self.ID_COL).T
+        self.sales = self.sales.drop(self.LOOKUP_COL, axis=1)
+        self.sales = self.sales.set_index(self.ID_COL).transpose().reset_index().rename(columns={'index':'d_col'})
+        #TODO: d_col isn't index, as seen in get_by_id usage.  
 
         self.calendar = calendar.cCalendar(path)
+
+    #----------------------------------------------------------------------------
+    # TODO: Define a common output format
+    # TODO: d_col isn't in the d_col format, prob an issue init
+    def get_by_id(self, id):
+  
+        result = pd.DataFrame()
+        result['d_col'] = self.sales.index
+        result = result.set_index('d_col')
+        result['data'] = self.sales[id]
+
+        print("\n\nget_by_id")
+        print(result.head())
+        return result
 
     #--------------------------------------------------------------------------------
     def get_date_range(self, date_start, date_end):
@@ -63,11 +78,11 @@ class cSalesData:
         if d_end not in self.d_cols:
             return None
 
-        first_d_col = self.values.index.get_loc("d_1")
-        d_first_col = self.values.index.get_loc(d_start)
-        d_end_col = self.values.index.get_loc(d_end) + 1
+        first_d_col = self.sales.index.get_loc("d_1")
+        d_first_col = self.sales.index.get_loc(d_start)
+        d_end_col = self.sales.index.get_loc(d_end) + 1
 
-        result = self.values.iloc[np.r_[0:first_d_col, d_first_col:d_end_col],:]
+        result = self.sales.iloc[np.r_[0:first_d_col, d_first_col:d_end_col],:]
         print(result.head())
         return result
 

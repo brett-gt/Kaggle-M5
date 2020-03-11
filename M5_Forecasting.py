@@ -2,7 +2,7 @@
 
 import PreProcess as pre
 import Visualization as visual
-import SalesData
+from SalesData import cSalesData
 import ARIMA
 import pandas as pd
 
@@ -41,10 +41,13 @@ out_path = "Output/"
 def main():   
     print("Main...")
 
-    sales_data = SalesData.cSalesData(data_path)
+    sales_data = cSalesData(data_path)
     #series = sales_data.get_date_range("2015-01-01", "2016-01-01")
-    series = sales_data.values['FOODS_3_694_TX_1_validation']
-    stationary.examine(series)
+    test_data = sales_data.get_by_id('FOODS_3_694_TX_1_validation')
+    print(test_data.head())
+    ARIMA.apply(test_data)
+
+    #stationary.examine(series)
  
     #visual.plot_rolling_window(series['FOODS_3_694_TX_1_validation'])
 

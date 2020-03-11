@@ -18,7 +18,20 @@ import Globals as globals
 #https://www.kaggle.com/tarunpaparaju/m5-competition-eda-models
 
 
+#--------------------------------------------------------------------------------
+def first_diff(timeseries, prev_periods = 7):
+    """ Calculate difference between current value and the prev_periods values
+        that came before it.  Shows variation in data for a period of time.
+    """
+    timeseries.diff(periods=prev_periods).plot(figsize=(20,10), linewidth=5, fontsize=20)
+    plt.show()
 
+#--------------------------------------------------------------------------------
+def autocorrelation_plot(timeseries):
+    """ Display correlation of current observations with previous ones
+    """
+    pd.plotting.autocorrelation_plot(timeseries)
+    plt.show()
 
 #--------------------------------------------------------------------------------
 def compare_sales_date_range(calendar, sales_val_data, id, d_start, d_end):
