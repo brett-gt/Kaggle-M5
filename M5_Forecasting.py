@@ -41,11 +41,26 @@ out_path = "Output/"
 def main():   
     print("Main...")
 
+    #sales_train_validation = pd.read_csv(data_path + "sales_train_validation.csv")
+    #sales_train_validation = sales_train_validation.drop(['item_id', 'dept_id', 'cat_id', 'store_id', 'state_id'], axis=1)
+    #sales_train_validation = pd.melt(sales_train_validation, id_vars = ['id'], var_name = 'day', value_name = 'demand')
+    #print('Melted sales train validation has {} rows and {} columns'.format(sales_train_validation.shape[0], sales_train_validation.shape[1]))
+    #print(sales_train_validation.head(50))
+
+
     sales_data = cSalesData(data_path)
+
+    test_data = sales_data.get_by_id('FOODS_3_586_CA_3_validation')
+    print(test_data.head(50))
+    print(sales_data.AUGMENT_COLS)
+
+
     #series = sales_data.get_date_range("2015-01-01", "2016-01-01")
-    test_data = sales_data.get_by_id('FOODS_3_694_TX_1_validation')
-    print(test_data.head())
-    ARIMA.apply(test_data)
+    #test_data = sales_data.get_by_id('FOODS_3_586_CA_3_validation')
+    #ARIMA.find_AR(test_data)
+    #ARIMA.find_differncing(test_data)
+    #ARIMA.find_MA(test_data)
+    #ARIMA.apply(test_data)
 
     #stationary.examine(series)
  

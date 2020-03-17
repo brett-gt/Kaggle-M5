@@ -8,7 +8,18 @@ class cCalendar:
     #----------------------------------------------------------------------------
     def __init__(self, path):
         print("\ncCalendar: initializing...")
+        print("Reading calendar.csv...")
         self.data = pd.read_csv(path + "calendar.csv")
+
+    #----------------------------------------------------------------------------
+    def wm_yr_wk_to_dcol(self, row):
+        """Take in the wm_yr_wk format and return the d_col entry
+        """
+        result = self.data.loc[self.data['wm_yr_wk']==row.wm_yr_wk].d
+        if(result.empty):
+            return None
+        else:
+            return result.values
 
     #---------------------------------------------------------------------------
     def getDays(self, days, limit="d_1963"):
