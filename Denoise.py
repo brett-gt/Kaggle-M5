@@ -1,9 +1,5 @@
-
 import pywt
 from statsmodels.robust import mad
-
-
-
 
 ##################################################################################
 # Denoising techniques

@@ -2,9 +2,10 @@
 
 import PreProcess as pre
 import Visualization as visual
-from SalesData import cSalesData
 import ARIMA
 import pandas as pd
+
+import Data as Data
 
 import Stationary as stationary
 
@@ -48,11 +49,10 @@ def main():
     #print(sales_train_validation.head(50))
 
 
-    sales_data = cSalesData(data_path)
+    #Data.merge_data_sets()
+    dataset = Data.read_data()
+    Data.augment_data(dataset)
 
-    test_data = sales_data.get_by_id('FOODS_3_586_CA_3_validation')
-    print(test_data.head(50))
-    print(sales_data.AUGMENT_COLS)
 
 
     #series = sales_data.get_date_range("2015-01-01", "2016-01-01")

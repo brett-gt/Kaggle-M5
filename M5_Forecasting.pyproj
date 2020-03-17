@@ -24,23 +24,17 @@
     <Compile Include="ARIMA.py">
       <SubType>Code</SubType>
     </Compile>
-    <Compile Include="BasicForecasting.py">
+    <Compile Include="Calendar.py" />
+    <Compile Include="Data.py">
       <SubType>Code</SubType>
     </Compile>
-    <Compile Include="Calendar.py" />
     <Compile Include="Denoise.py">
       <SubType>Code</SubType>
     </Compile>
     <Compile Include="Error.py">
       <SubType>Code</SubType>
     </Compile>
-    <Compile Include="Globals.py">
-      <SubType>Code</SubType>
-    </Compile>
     <Compile Include="M5_Forecasting.py" />
-    <Compile Include="PreProcess.py">
-      <SubType>Code</SubType>
-    </Compile>
     <Compile Include="SalesData.py" />
     <Compile Include="Stationary.py">
       <SubType>Code</SubType>

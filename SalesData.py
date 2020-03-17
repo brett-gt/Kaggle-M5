@@ -39,7 +39,6 @@ class cSalesData:
         print("Sales size = {}\nShape ={}\nShape[0] x Shape[1] = {}".
               format(self.sales.size, self.sales.shape, self.sales.shape[0]*self.sales.shape[1])) 
         print(self.sales.head())
-
         del data
 
 
@@ -48,7 +47,8 @@ class cSalesData:
         #self.calendar = cCalendar(path)
         calendar = pd.read_csv(path + "calendar.csv")
         calendar.drop(['weekday', 'wday', 'month', 'year'], inplace = True, axis = 1)
-        #print(calendar.head())
+        print(calendar.head())
+        print("\nMerging calendar prices with the data set...")
         self.sales = pd.merge(self.sales, calendar, how = 'left', left_on = ['day'], right_on = ['d'])
         self.sales.drop(['d', 'day'], inplace = True, axis = 1)
         print(self.sales.head())
@@ -58,11 +58,15 @@ class cSalesData:
         print("Reading sell_price.csv...")
         sell_prices = pd.read_csv(path + "sell_prices.csv")
         print(sell_prices.head())
+        print("\nMerging sell prices with the data set...")
         self.sales = pd.merge(self.sales, sell_prices, how = 'left', on = ['store_id', 'item_id', 'wm_yr_wk'])
         print(self.sales.head())
         del sell_prices
 
+
+        print("\n\nSAving to a pickle...")
         self.sales.to_pickle("combined_data.pkl")
+
         self.reduce_mem_usage(True)
 
 
