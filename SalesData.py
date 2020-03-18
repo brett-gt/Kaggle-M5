@@ -3,7 +3,6 @@ import numpy as np
 import gc
 import pickle as pickle
 
-import Globals as globals
 from Calendar import cCalendar
 
 class cSalesData:

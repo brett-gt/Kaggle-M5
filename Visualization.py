@@ -9,8 +9,6 @@ from plotly.subplots import make_subplots
 import numpy as np
 import datetime as datetime
 
-import PreProcess as pre
-import Globals as globals
 
 #python -m pip install plotly --user
 

@@ -1,5 +1,4 @@
 import pandas as pd
-import Globals as globals
 
 class cCalendar:
     """description of class"""
@@ -43,6 +42,53 @@ class cCalendar:
             return result.values
 
     #--------------------------------------------------------------------------------
+    def get_dcol_for_year(self, year):
+        """ Gets the dcol range for a particular year
+        """
+        start_date = str(year) + "-01-01"
+        end_date = str(year) + "-12-31"
+
+        return self.get_date_range(start_date, end_date)
+
+
+    #--------------------------------------------------------------------------------
+    def get_date_range(self, date_start, date_end):
+        """ Get a range of rows from a dataset using the d_XXXX value.
+
+            Arguments:
+                data- dataset that contains a "d" column (d_XXXX)
+                d_start - first d_XXXX
+                d_end   - end d_XXXX
+
+            Returns:
+                data frame
+        """  
+        d_start = self.get_d_from_date(date_start)
+        if(d_start == None):
+            d_start = "d_1"
+        d_end = self.get_d_from_date(date_end)
+        if(d_end == None):
+            d_end = "d_1913"
+        return self.get_d_range(d_start, d_end)
+
+    #--------------------------------------------------------------------------------
+    def get_d_range(self, d_start, d_end):
+        """ Get a range of rows from a dataset using the d_XXXX value.
+        """  
+        d_start_num = int(d_start.split('_')[1])
+        d_end_num = int(d_end.split('_')[1]) + 1
+
+        print(d_start_num)
+        print(d_end_num)
+
+        result = []
+
+        for x in range(d_start_num, d_end_num):
+            result.append("d_" + str(x))
+        return result
+
+
+    #--------------------------------------------------------------------------------
     def get_d_from_date(self, date):
         """ The common date identified is d_XXXX where XXXX is a numbered list from
             1 to 1969 (currently).  Use this function to get the d_XXXX that corresponds
@@ -56,9 +102,6 @@ class cCalendar:
                 string - d_XXXX or null if not found
         """  
         result = self.data.loc[self.data['date']==date].d
-
-        print("\ncCalendar: get_d_from_date: Looking for " + str(date) + " is " + str(result))
-
         if(result.empty):
             return None
         else:
@@ -79,9 +122,6 @@ class cCalendar:
                 datetime - format year-month-day with 0 padding
         """ 
         result = self.data.loc[calendar['d']==d].date
-
-        print("\ncCalendar: get_date_from_d: Looking for " + str(d) + " is " + str(result))
-
         if(result.empty):
             return None
         else:

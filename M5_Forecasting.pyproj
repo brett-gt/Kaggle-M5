@@ -28,6 +28,9 @@
     <Compile Include="Data.py">
       <SubType>Code</SubType>
     </Compile>
+    <Compile Include="DataExam.py">
+      <SubType>Code</SubType>
+    </Compile>
     <Compile Include="Denoise.py">
       <SubType>Code</SubType>
     </Compile>
