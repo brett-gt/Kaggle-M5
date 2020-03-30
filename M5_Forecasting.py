@@ -5,10 +5,13 @@ import ARIMA
 import pandas as pd
 
 import Data as Data
-import DataExam as dataexam
+import DataExam 
+import lgb as lgb_wrap
 
 import Stationary as stationary
 import Calendar as calendar
+import Fst_Copy 
+from WRMSSEEvaluator import WRMSSEEvaluator
 
 #owing to the fact that so many factors affect the sales on a given day. On certain days, the sales quantity is 0, which indicates that a certain product may not be available on that day (as noted by Rob in his kernel).
 
@@ -42,22 +45,37 @@ out_path = "Output/"
 #-------------------------------------------------------------------------------------
 def main():   
     print("Main...")
+    #Fst_Copy.run()
 
-    #sales_train_validation = pd.read_csv(data_path + "sales_train_validation.csv")
-    #sales_train_validation = sales_train_validation.drop(['item_id', 'dept_id', 'cat_id', 'store_id', 'state_id'], axis=1)
-    #sales_train_validation = pd.melt(sales_train_validation, id_vars = ['id'], var_name = 'day', value_name = 'demand')
-    #print('Melted sales train validation has {} rows and {} columns'.format(sales_train_validation.shape[0], sales_train_validation.shape[1]))
-    #print(sales_train_validation.head(50))
-
-
+    # Phase 1
     #Data.merge_data_sets()
-    #dataset = Data.read_data()
-    #Data.augment_data(dataset)
-
-    dataexam.basic_summary("summary.csv")
 
 
+    # Phase 2 
+    #data = Data.read(filename="combined_data.pkl")
+    #data = Data.subset(data, nrows=27500000)
+    #data = Data.augment(data, filename='augmented_data.pkl')
+    #print(data.columns)
 
+    # Phase 3 
+    data = Data.read(filename="augmented_data.pkl")
+    data.drop(['snap_CA', 'snap_TX', 'snap_WI'], inplace = True, axis = 1)
+    DataExam.date_summary(data)
+    print('Our final dataset to train has {} rows and {} columns'.format(data.shape[0], data.shape[1]))
+    print(data.columns)
+
+    print("Splitting data...")
+    evaluator = WRMSSEEvaluator()
+    results = lgb_wrap.train_and_predict(data)
+    DataExam.date_summary(results)
+
+    lgb_wrap.make_submission(results)
+
+    print(evaluator.score(results))
+
+
+
+    #dataexam.basic_summary("summary.csv")
 
     #series = sales_data.get_date_range("2015-01-01", "2016-01-01")
     #test_data = sales_data.get_by_id('FOODS_3_586_CA_3_validation')
@@ -96,6 +114,20 @@ def main():
 
     #visual.display_train_val(train_data, val_data)
 
+
+#-------------------------------------------------------------------------------------
+def lgb_opt():
+    data = Data.read(filename="augmented_data.pkl")
+    data.drop(['snap_CA', 'snap_TX', 'snap_WI'], inplace = True, axis = 1)
+    DataExam.date_summary(data)
+    print('Our final dataset to train has {} rows and {} columns'.format(data.shape[0], data.shape[1]))
+    print(data.columns)
+    print("\n\n\n")
+
+    opt_param = lgb_wrap.bayes_optimize(data)
+    print(opt_param)
+
+
 #-------------------------------------------------------------------------------------
 def cal_test():
     print("Reading calendar...")
@@ -104,7 +136,6 @@ def cal_test():
 
     print("Results")
     print(d_cols)
-
 
     d_cols = cal.get_dcol_for_year(2013)
 

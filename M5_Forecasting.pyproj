@@ -37,12 +37,21 @@
     <Compile Include="Error.py">
       <SubType>Code</SubType>
     </Compile>
+    <Compile Include="Fst_Copy.py">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="lgb.py">
+      <SubType>Code</SubType>
+    </Compile>
     <Compile Include="M5_Forecasting.py" />
     <Compile Include="SalesData.py" />
     <Compile Include="Stationary.py">
       <SubType>Code</SubType>
     </Compile>
     <Compile Include="Visualization.py">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="WRMSSEEvaluator.py">
       <SubType>Code</SubType>
     </Compile>
   </ItemGroup>

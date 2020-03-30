@@ -67,3 +67,12 @@ def week_summary(self, filename, days=['Monday']):
 
     results.set_index('id')
     results.to_csv(filename)
+
+#----------------------------------------------------------------------------
+# TODO
+def date_summary(data):
+    print("Summary of dates:")
+    print("There are " + str(len(data.columns)) + " entries.")
+    print(data['date'].min())
+    print(data['date'].max())
+
