@@ -117,7 +117,7 @@ def train_and_predict(data, show_plots=False):
     evals_result = {}
     model = lgb.train(params, 
                       train_set, 
-                      num_boost_round = 2500, 
+                      num_boost_round = 250, 
                       early_stopping_rounds = 50, 
                       valid_sets = [train_set, val_set], 
                       verbose_eval = 100,
@@ -152,15 +152,13 @@ def make_submission(test):
     predictions = pd.pivot(predictions, index = 'id', columns = 'date', values = 'demand').reset_index()
     predictions.columns = ['id'] + ['F' + str(i + 1) for i in range(28)]
 
-
     evaluation_rows = [row for row in submission['id'] if 'evaluation' in row] 
     evaluation = submission[submission['id'].isin(evaluation_rows)]
-
-
 
     validation = submission[['id']].merge(predictions, on = 'id')
     final = pd.concat([validation, evaluation])
     final.to_csv('submission.csv', index = False)
+    return final
 
 
 ##################################################################################

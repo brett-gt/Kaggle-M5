@@ -58,20 +58,21 @@ def main():
     #print(data.columns)
 
     # Phase 3 
-    data = Data.read(filename="augmented_data.pkl")
-    data.drop(['snap_CA', 'snap_TX', 'snap_WI'], inplace = True, axis = 1)
-    DataExam.date_summary(data)
-    print('Our final dataset to train has {} rows and {} columns'.format(data.shape[0], data.shape[1]))
-    print(data.columns)
+    #data = Data.read(filename="augmented_data.pkl")
+    #data.drop(['snap_CA', 'snap_TX', 'snap_WI'], inplace = True, axis = 1)
+    #DataExam.date_summary(data)
+    #print('Our final dataset to train has {} rows and {} columns'.format(data.shape[0], data.shape[1]))
+    #print(data.columns)
 
-    print("Splitting data...")
+    #print("Splitting data...")
+    #results = lgb_wrap.train_and_predict(data)
+    #DataExam.date_summary(results)
+
+    #final = lgb_wrap.make_submission(results)
+
     evaluator = WRMSSEEvaluator()
-    results = lgb_wrap.train_and_predict(data)
-    DataExam.date_summary(results)
-
-    lgb_wrap.make_submission(results)
-
-    print(evaluator.score(results))
+    final = pd.read_csv('submission.csv')
+    print(evaluator.score_submission(final))
 
 
 

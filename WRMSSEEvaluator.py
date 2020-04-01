@@ -19,6 +19,8 @@ class WRMSSEEvaluator(object):
     #----------------------------------------------------------------------------
     def __init__(self, path = "Data/"):
         print("\n\nInitializing WRMSSE Evaluator")
+
+        #Added this stuff because the way I am doing it I don't keep these around
         print("Reading data...")
         sales_data = pd.read_csv(path + "sales_train_validation.csv")
         train_df = sales_data.iloc[:,:-28]
@@ -31,10 +33,15 @@ class WRMSSEEvaluator(object):
         train_target_columns = train_y.columns.tolist()
         weight_columns = train_y.iloc[:, -28:].columns.tolist()
 
-        train_df['all_id'] = 0  # for lv1 aggregation
+        train_df['all_id'] = 'all'  # for lv1 aggregation
 
         id_columns = train_df.loc[:, ~train_df.columns.str.startswith('d_')].columns.tolist()
+
         valid_target_columns = valid_df.loc[:, valid_df.columns.str.startswith('d_')].columns.tolist()
+        #TODO:
+        #valid_target_columns = ['d_1914', 'd_1915', 'd_1916', 'd_1917', 'd_1918', 'd_1919', 'd_1920', 'd_1921', 'd_1922', 
+        #                        'd_1923', 'd_1924', 'd_1925', 'd_1926', 'd_1927', 'd_1928', 'd_1929', 'd_1930', 'd_1931', 
+        #                        'd_1932', 'd_1933', 'd_1934', 'd_1935', 'd_1936', 'd_1937', 'd_1938', 'd_1939', 'd_1940', 'd_1941']
 
         if not all([c in valid_df.columns for c in id_columns]):
             valid_df = pd.concat([train_df[id_columns], valid_df], axis=1, sort=False)
@@ -100,7 +107,24 @@ class WRMSSEEvaluator(object):
         return (score / scale).map(np.sqrt)
 
     #----------------------------------------------------------------------------
+    def score_submission(self, results) -> float:
+        results = results[~results.id.str.contains("evaluation")]
+        results = results.drop('id',axis =1)
+
+        col_dic = {}
+        for i in range(28):
+            col_dic['F'+str(i+1)] = 'd_' + str(1886+i)
+        results.rename(columns=col_dic, inplace = True)
+
+        print(results.columns)
+
+        return(self.score(results))
+
+    #----------------------------------------------------------------------------
     def score(self, valid_preds: Union[pd.DataFrame, np.ndarray]) -> float:
+        print(self.valid_df.columns)
+        print(valid_preds.columns)          
+
         assert self.valid_df[self.valid_target_columns].shape == valid_preds.shape
 
         if isinstance(valid_preds, np.ndarray):
@@ -115,4 +139,5 @@ class WRMSSEEvaluator(object):
             lv_scores = pd.concat([weight, lv_scores], axis=1, sort=False).prod(axis=1)
             all_scores.append(lv_scores.sum())
 
+        self.all_scores = all_scores
         return np.mean(all_scores)
