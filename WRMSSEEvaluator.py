@@ -107,24 +107,44 @@ class WRMSSEEvaluator(object):
         return (score / scale).map(np.sqrt)
 
     #----------------------------------------------------------------------------
-    def score_submission(self, results) -> float:
+    def score_submission(self, results, d_col_start = 1886) -> float:
+        """ Adjust submission column headers to match what is expected by the default
+            WRMSSE calculations.
+
+            Internal testing starts at 1886 (assuming last 28 held): 3/27/16
+
+            Submission starts at F1 (val) = D_1914 = 4/24/16
+                                 F1 (eval) = D_1942 = 5/22/16
+        """
         results = results[~results.id.str.contains("evaluation")]
         results = results.drop('id',axis =1)
 
         col_dic = {}
         for i in range(28):
-            col_dic['F'+str(i+1)] = 'd_' + str(1886+i)
+            col_dic['F'+str(i+1)] = 'd_' + str(d_col_start+i)
         results.rename(columns=col_dic, inplace = True)
-
-        print(results.columns)
-
         return(self.score(results))
 
     #----------------------------------------------------------------------------
-    def score(self, valid_preds: Union[pd.DataFrame, np.ndarray]) -> float:
-        print(self.valid_df.columns)
-        print(valid_preds.columns)          
+    def score_validation(self, results, d_col_start = 1886) -> float:
+        """ Adjust validation column headers to match what is expected by the default
+            WRMSSE calculations.
 
+            Internal testing starts at 1886 (assuming last 28 held): 3/27/16
+        """
+        results = results[~results.id.str.contains("evaluation")]
+        results = results.drop('id',axis =1)
+
+        col_dic = {}
+        for i in range(28):
+            col_dic['F'+str(i+1)] = 'd_' + str(d_col_start+i)
+        results.rename(columns=col_dic, inplace = True)
+        return(self.score(results))
+
+    #----------------------------------------------------------------------------
+    def score(self, valid_preds: Union[pd.DataFrame, np.ndarray]) -> float:      
+
+        print("Scoring results...")
         assert self.valid_df[self.valid_target_columns].shape == valid_preds.shape
 
         if isinstance(valid_preds, np.ndarray):

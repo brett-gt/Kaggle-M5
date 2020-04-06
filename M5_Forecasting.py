@@ -6,7 +6,7 @@ import pandas as pd
 
 import Data as Data
 import DataExam 
-import lgb as lgb_wrap
+import lgb 
 
 import Stationary as stationary
 import Calendar as calendar
@@ -58,25 +58,26 @@ def main():
     #print(data.columns)
 
     # Phase 3 
-    #data = Data.read(filename="augmented_data.pkl")
-    #data.drop(['snap_CA', 'snap_TX', 'snap_WI'], inplace = True, axis = 1)
+    data = Data.read(filename="augmented_data.pkl")
+    data.drop(['snap_CA', 'snap_TX', 'snap_WI'], inplace = True, axis = 1)
     #DataExam.date_summary(data)
-    #print('Our final dataset to train has {} rows and {} columns'.format(data.shape[0], data.shape[1]))
-    #print(data.columns)
+    print('Our final dataset to train has {} rows and {} columns'.format(data.shape[0], data.shape[1]))
+    print(data.columns)
 
-    #print("Splitting data...")
-    #results = lgb_wrap.train_and_predict(data)
-    #DataExam.date_summary(results)
+    lgb_wrap = lgb.LGB(data)
+    lgb_wrap.train_and_predict(data)
+    final = lgb_wrap.make_submission()
 
-    #final = lgb_wrap.make_submission(results)
-
-    evaluator = WRMSSEEvaluator()
-    final = pd.read_csv('submission.csv')
-    print(evaluator.score_submission(final))
+    #evaluator = WRMSSEEvaluator()
+    #final = pd.read_csv('submission.csv')
+    #print(evaluator.score_submission(final))
 
 
 
     #dataexam.basic_summary("summary.csv")
+
+
+
 
     #series = sales_data.get_date_range("2015-01-01", "2016-01-01")
     #test_data = sales_data.get_by_id('FOODS_3_586_CA_3_validation')
