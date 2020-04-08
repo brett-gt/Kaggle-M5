@@ -13,6 +13,8 @@ from sklearn import preprocessing, metrics
 from sklearn.metrics import roc_auc_score
 import matplotlib.pyplot as plt
 
+from WRMSSEEvaluator import WRMSSEEvaluator
+
 # define list of features
 features = ['item_id', 'dept_id', 'cat_id', 'store_id', 'state_id', 'year', 'month', 'week', 'day', 
             'dayofweek', 'event_name_1', 'event_type_1', 'event_name_2', 'event_type_2', 
@@ -27,13 +29,20 @@ class LGB(object):
     #--------------------------------------------------------------------------------
     def __init__(self, data):
         self.model = []
-        #self.evaluator = WRMSSEEvaluator()
+        self.evaluator = WRMSSEEvaluator()
+        print(data.shape)
         self.split_data(data)
 
     #--------------------------------------------------------------------------------
     def split_data(self, data):
         print("Splitting data...")
         self.x_train, self.y_train, self.x_val, self.y_val, self.test = Data.seperate(data, '2016-03-27', '2016-04-24')
+        print(self.x_train.shape)
+        print(self.y_train.shape)
+        print(self.x_val.shape)
+        print(self.y_val.shape)
+        print(self.x_train[features].shape)
+        print(self.x_val[features].shape)
         self.d_col_val = 1886
 
     #--------------------------------------------------------------------------------
@@ -57,23 +66,41 @@ class LGB(object):
   
         print("Training model...")
         evals_result = {}
+        #TODO:
+        # 'metric':'auc'
         self.model = lgb.train(params, 
                                train_set, 
-                               num_boost_round = 250, 
+                               num_boost_round = 250,  #TODO: 250 
                                early_stopping_rounds = 50, 
-                               valid_sets = [train_set, val_set], 
-                               verbose_eval = 100,
-                               evals_result = evals_result)
+                               valid_sets = val_set, #[train_set, val_set], 
+                               verbose_eval = 20,
+                               feval = self.WRMSSE_val_loss,    #TODO NEW
+                               evals_result = evals_result)         
 
+        # TODO: Getting error with this once I moved it into class
         #if(show_plots):
         #    ax = lgb.plot_importance(self.model, max_num_features=20)
         #    plt.show()
 
         #    ax = lgb.plot_split_value_histogram(self.model, feature='store_id', bins='auto')
         #    plt.show()
-    
-    
+ 
+    #--------------------------------------------------------------------------------
+    def WRMSSE_val_loss(self, pred, train_data):
+        #predictions = y_pred[['id', 'date', 'demand']]
+        #predictions = pd.pivot(predictions, index = 'id', columns = 'date', values = 'demand').reset_index()
+        #predictions.columns = ['id'] + ['d_' + str(self.d_col_val + i) for i in range(28)]
+        #predictions = predictions.drop('id',axis =1) #WRMSSE only want data columns
 
+        #print(predictions.columns)
+
+        pred = pred.reshape(int(len(pred)/28) , 28)
+        loss = self.evaluator.score(pred)
+
+        #Note:  Want smallest error, so higher is worse
+        return "custom_loss", loss, False
+
+    
     #--------------------------------------------------------------------------------
     def make_submission(self):
         #TODO: This was at the end of train
@@ -101,11 +128,7 @@ class LGB(object):
         final.to_csv('submission.csv', index = False)
         return final
 
-
-    #--------------------------------------------------------------------------------
-    def WRMSSE_val_loss(self):
-        return 0
-
+#END CLASS
 
 
 #--------------------------------------------------------------------------------
@@ -114,8 +137,8 @@ class LGB(object):
 # https://www.kaggle.com/tilii7/bayesian-optimization-of-xgboost-parameters
 # https://www.kaggle.com/clair14/tutorial-bayesian-optimization
 def bayes_optimize(data, 
-                   init_round=15, 
-                   opt_round=25, 
+                   init_round=15, #TODO
+                   opt_round=25,  #TODO
                    n_folds=5, random_seed=6, 
                    n_estimators=10000, 
                    learning_rate=0.05, 

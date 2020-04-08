@@ -55,6 +55,8 @@ class WRMSSEEvaluator(object):
         self.id_columns = id_columns
         self.valid_target_columns = valid_target_columns
 
+
+        # Calculate weights
         weight_df = self.get_weight_df()
 
         self.group_ids = (
@@ -126,25 +128,7 @@ class WRMSSEEvaluator(object):
         return(self.score(results))
 
     #----------------------------------------------------------------------------
-    def score_validation(self, results, d_col_start = 1886) -> float:
-        """ Adjust validation column headers to match what is expected by the default
-            WRMSSE calculations.
-
-            Internal testing starts at 1886 (assuming last 28 held): 3/27/16
-        """
-        results = results[~results.id.str.contains("evaluation")]
-        results = results.drop('id',axis =1)
-
-        col_dic = {}
-        for i in range(28):
-            col_dic['F'+str(i+1)] = 'd_' + str(d_col_start+i)
-        results.rename(columns=col_dic, inplace = True)
-        return(self.score(results))
-
-    #----------------------------------------------------------------------------
     def score(self, valid_preds: Union[pd.DataFrame, np.ndarray]) -> float:      
-
-        print("Scoring results...")
         assert self.valid_df[self.valid_target_columns].shape == valid_preds.shape
 
         if isinstance(valid_preds, np.ndarray):
@@ -160,4 +144,6 @@ class WRMSSEEvaluator(object):
             all_scores.append(lv_scores.sum())
 
         self.all_scores = all_scores
-        return np.mean(all_scores)
+        score = np.mean(all_scores)
+        print("WRMSSE Score: " + str(score))
+        return score

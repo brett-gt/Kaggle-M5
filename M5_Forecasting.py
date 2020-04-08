@@ -6,7 +6,7 @@ import pandas as pd
 
 import Data as Data
 import DataExam 
-import lgb 
+import lgb as lgb_wrap
 
 import Stationary as stationary
 import Calendar as calendar
@@ -64,9 +64,9 @@ def main():
     print('Our final dataset to train has {} rows and {} columns'.format(data.shape[0], data.shape[1]))
     print(data.columns)
 
-    lgb_wrap = lgb.LGB(data)
-    lgb_wrap.train_and_predict(data)
-    final = lgb_wrap.make_submission()
+    LGB = lgb_wrap.LGB(data)
+    LGB.train_and_predict(data)
+    final = LGB.make_submission()
 
     #evaluator = WRMSSEEvaluator()
     #final = pd.read_csv('submission.csv')
