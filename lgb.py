@@ -29,20 +29,22 @@ class LGB(object):
     #--------------------------------------------------------------------------------
     def __init__(self, data):
         self.model = []
-        self.evaluator = WRMSSEEvaluator()
-        print(data.shape)
+        #self.evaluator = WRMSSEEvaluator()
         self.split_data(data)
 
     #--------------------------------------------------------------------------------
-    def split_data(self, data):
+    def split_data(self, data, verbose = False):
         print("Splitting data...")
         self.x_train, self.y_train, self.x_val, self.y_val, self.test = Data.seperate(data, '2016-03-27', '2016-04-24')
-        print(self.x_train.shape)
-        print(self.y_train.shape)
-        print(self.x_val.shape)
-        print(self.y_val.shape)
-        print(self.x_train[features].shape)
-        print(self.x_val[features].shape)
+
+        if(verbose):
+            print(self.x_train.shape)
+            print(self.y_train.shape)
+            print(self.x_val.shape)
+            print(self.y_val.shape)
+            print(self.x_train[features].shape)
+            print(self.x_val[features].shape)
+
         self.d_col_val = 1886
 
     #--------------------------------------------------------------------------------
@@ -50,55 +52,57 @@ class LGB(object):
         print("\n\n\nlgb.Run()")
  
         # define random hyperparammeters
-        params = {
-            'boosting_type': 'gbdt',
-            'metric': 'rmse',
-            'objective': 'regression',
-            'n_jobs': -1,
-            'seed': 236,
-            'learning_rate': 0.08,
-            'bagging_fraction': 0.75,
-            'bagging_freq': 10, 
-            'colsample_bytree': 0.75}
+        # https://www.kaggle.com/kneroma/m5-first-public-notebook-under-0-50
 
-        train_set = lgb.Dataset(self.x_train[features], self.y_train)
-        val_set = lgb.Dataset(self.x_val[features], self.y_val)    
+        cat_feats = ['item_id', 'dept_id','store_id', 'cat_id', 'state_id', 
+                     "event_name_1", "event_name_2", "event_type_1", "event_type_2"]
+
+        train_set = lgb.Dataset(self.x_train[features], self.y_train, categorical_feature = cat_feats)
+        val_set = lgb.Dataset(self.x_val[features], self.y_val, categorical_feature = cat_feats)    
   
         print("Training model...")
         evals_result = {}
+
         #TODO:
         # 'metric':'auc'
-        self.model = lgb.train(params, 
-                               train_set, 
-                               num_boost_round = 250,  #TODO: 250 
-                               early_stopping_rounds = 50, 
-                               valid_sets = val_set, #[train_set, val_set], 
-                               verbose_eval = 20,
-                               feval = self.WRMSSE_val_loss,    #TODO NEW
-                               evals_result = evals_result)         
+        params = {
+            'seed': 236,
+            'boosting_type': 'gbdt',
+            'metric': 'rmse',
+            'objective': 'poisson',
+            'force_row_wise' : True,
+            'bagging_freq' : 1,            #Freq of iterations on which bagging is perfromed
+            'bagging_seed' : 236,          #Random seed for bagging
+            'sub_row' : 0.75,              #Select part of data for training, used to speed up and deal with overfitting
+            'learning_rate': 0.075,
+            'num_leaves':128,              #Number of leaves in one tree
+            'min_data_in_leaf':50,         #Min data in one leaf, helps with overfitting
+               #'colsample_bytree': 0.75
+            }      
+
+        self.model = lgb.train(params,
+                               train_set,
+                               valid_sets = val_set,
+                               verbose_eval = 10,
+                               num_boost_round = 2500,
+                               early_stopping_rounds = 50,
+                               )
 
         # TODO: Getting error with this once I moved it into class
-        #if(show_plots):
-        #    ax = lgb.plot_importance(self.model, max_num_features=20)
-        #    plt.show()
+        if(show_plots):
+            ax = lgb.plot_importance(self.model, max_num_features=20)
+            plt.show()
 
-        #    ax = lgb.plot_split_value_histogram(self.model, feature='store_id', bins='auto')
-        #    plt.show()
+            ax = lgb.plot_split_value_histogram(self.model, feature='store_id', bins='auto')
+            plt.show()
  
     #--------------------------------------------------------------------------------
     def WRMSSE_val_loss(self, pred, train_data):
-        #predictions = y_pred[['id', 'date', 'demand']]
-        #predictions = pd.pivot(predictions, index = 'id', columns = 'date', values = 'demand').reset_index()
-        #predictions.columns = ['id'] + ['d_' + str(self.d_col_val + i) for i in range(28)]
-        #predictions = predictions.drop('id',axis =1) #WRMSSE only want data columns
-
-        #print(predictions.columns)
-
         pred = pred.reshape(int(len(pred)/28) , 28)
         loss = self.evaluator.score(pred)
 
         #Note:  Want smallest error, so higher is worse
-        return "custom_loss", loss, False
+        return "WRMSSEE", loss, False
 
     
     #--------------------------------------------------------------------------------

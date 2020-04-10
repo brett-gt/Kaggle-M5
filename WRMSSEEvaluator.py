@@ -11,11 +11,13 @@ from typing import Union
 
 import numpy as np
 import pandas as pd
-#from tqdm.notebook import tqdm_notebook as tqdm
-
 
 class WRMSSEEvaluator(object):
     
+    group_ids = ( 'all_id', 'state_id', 'store_id', 'cat_id', 'dept_id', 'item_id',
+        ['state_id', 'cat_id'],  ['state_id', 'dept_id'], ['store_id', 'cat_id'],
+        ['store_id', 'dept_id'], ['item_id', 'state_id'], ['item_id', 'store_id'])
+
     #----------------------------------------------------------------------------
     def __init__(self, path = "Data/"):
         print("\n\nInitializing WRMSSE Evaluator")
@@ -29,15 +31,13 @@ class WRMSSEEvaluator(object):
         calendar = pd.read_csv(path + "calendar.csv")
         prices = pd.read_csv(path + "sell_prices.csv")
 
-        train_y = train_df.loc[:, train_df.columns.str.startswith('d_')]
-        train_target_columns = train_y.columns.tolist()
-        weight_columns = train_y.iloc[:, -28:].columns.tolist()
+        train_target_columns = [i for i in train_df.columns if i.startswith('d_')]
+        weight_columns = train_df.iloc[:, -28:].columns.tolist()
 
         train_df['all_id'] = 'all'  # for lv1 aggregation
+        id_columns = [i for i in train_df.columns if not i.startswith('d_')]
+        valid_target_columns = [i for i in valid_df.columns if i.startswith('d_')]
 
-        id_columns = train_df.loc[:, ~train_df.columns.str.startswith('d_')].columns.tolist()
-
-        valid_target_columns = valid_df.loc[:, valid_df.columns.str.startswith('d_')].columns.tolist()
         #TODO:
         #valid_target_columns = ['d_1914', 'd_1915', 'd_1916', 'd_1917', 'd_1918', 'd_1919', 'd_1920', 'd_1921', 'd_1922', 
         #                        'd_1923', 'd_1924', 'd_1925', 'd_1926', 'd_1927', 'd_1928', 'd_1929', 'd_1930', 'd_1931', 
@@ -46,67 +46,95 @@ class WRMSSEEvaluator(object):
         if not all([c in valid_df.columns for c in id_columns]):
             valid_df = pd.concat([train_df[id_columns], valid_df], axis=1, sort=False)
 
-        self.train_df = train_df
-        self.valid_df = valid_df
-        self.calendar = calendar
-        self.prices = prices
+        self.train_series = self.trans_30490_to_42840(train_df, 
+                                                      train_target_columns, 
+                                                      self.group_ids)
 
+        self.valid_series = self.trans_30490_to_42840(valid_df, 
+                                                      valid_target_columns, 
+                                                      self.group_ids)
+
+        # Set values we want to keep
+        self.valid_df = valid_df
         self.weight_columns = weight_columns
         self.id_columns = id_columns
         self.valid_target_columns = valid_target_columns
 
-
         # Calculate weights
-        weight_df = self.get_weight_df()
+        self.weights = self.get_weight_df(calendar, prices, train_df)
+        self.scale = self.get_scale()
 
-        self.group_ids = (
-            'all_id',
-            'state_id',
-            'store_id',
-            'cat_id',
-            'dept_id',
-            ['state_id', 'cat_id'],
-            ['state_id', 'dept_id'],
-            ['store_id', 'cat_id'],
-            ['store_id', 'dept_id'],
-            'item_id',
-            ['item_id', 'state_id'],
-            ['item_id', 'store_id']
-        )
-
-        for i, group_id in enumerate(self.group_ids): #tqdm(self.group_ids)
-            train_y = train_df.groupby(group_id)[train_target_columns].sum()
-            scale = []
-            for _, row in train_y.iterrows():
-                series = row.values[np.argmax(row.values != 0):]
-                scale.append(((series[1:] - series[:-1]) ** 2).mean())
-            setattr(self, f'lv{i + 1}_scale', np.array(scale))
-            setattr(self, f'lv{i + 1}_train_df', train_y)
-            setattr(self, f'lv{i + 1}_valid_df', valid_df.groupby(group_id)[valid_target_columns].sum())
-
-            lv_weight = weight_df.groupby(group_id)[weight_columns].sum().sum(axis=1)
-            setattr(self, f'lv{i + 1}_weight', lv_weight / lv_weight.sum())
 
     #----------------------------------------------------------------------------
-    def get_weight_df(self) -> pd.DataFrame:
-        day_to_week = self.calendar.set_index('d')['wm_yr_wk'].to_dict()
-        weight_df = self.train_df[['item_id', 'store_id'] + self.weight_columns].set_index(['item_id', 'store_id'])
-        weight_df = weight_df.stack().reset_index().rename(columns={'level_2': 'd', 0: 'value'})
-        weight_df['wm_yr_wk'] = weight_df['d'].map(day_to_week)
-
-        weight_df = weight_df.merge(self.prices, how='left', on=['item_id', 'store_id', 'wm_yr_wk'])
-        weight_df['value'] = weight_df['value'] * weight_df['sell_price']
-        weight_df = weight_df.set_index(['item_id', 'store_id', 'd']).unstack(level=2)['value']
-        weight_df = weight_df.loc[zip(self.train_df.item_id, self.train_df.store_id), :].reset_index(drop=True)
-        weight_df = pd.concat([self.train_df[self.id_columns], weight_df], axis=1, sort=False)
-        return weight_df
+    def get_scale(self):
+        '''
+        scaling factor for each series ignoring starting zeros
+        '''
+        scales = []
+        for i in range(len(self.train_series)):
+            series = self.train_series.iloc[i].values
+            series = series[np.argmax(series!=0):]
+            scale = ((series[1:] - series[:-1]) ** 2).mean()
+            scales.append(scale)
+        return np.array(scales)
 
     #----------------------------------------------------------------------------
-    def rmsse(self, valid_preds: pd.DataFrame, lv: int) -> pd.Series:
-        valid_y = getattr(self, f'lv{lv}_valid_df')
-        score = ((valid_y - valid_preds) ** 2).mean(axis=1)
-        scale = getattr(self, f'lv{lv}_scale')
-        return (score / scale).map(np.sqrt)
+    def get_name(self, i):
+        '''
+        convert a str or list of strings to unique string 
+        used for naming each of 42840 series
+        '''
+        if type(i) == str or type(i) == int:
+            return str(i)
+        else:
+            return "--".join(i)
+
+    #----------------------------------------------------------------------------
+    def get_weight_df(self, calendar, prices, train_df) -> pd.DataFrame:
+        """
+        returns weights for each of 42840 series in a dataFrame
+        """
+        day_to_week = calendar.set_index("d")["wm_yr_wk"].to_dict()
+        weight_df = train_df[["item_id", "store_id"] + self.weight_columns].set_index(["item_id", "store_id"])
+        weight_df = (weight_df.stack().reset_index().rename(columns={"level_2": "d", 0: "value"}))
+        weight_df["wm_yr_wk"] = weight_df["d"].map(day_to_week)
+        weight_df = weight_df.merge(prices, how="left", on=["item_id", "store_id", "wm_yr_wk"])
+
+        weight_df["value"] = weight_df["value"] * weight_df["sell_price"]
+        weight_df = weight_df.set_index(["item_id", "store_id", "d"]).unstack(level=2)["value"]
+        weight_df = weight_df.loc[zip(train_df.item_id, train_df.store_id), : ].reset_index(drop=True)
+        weight_df = pd.concat([train_df[self.id_columns], weight_df], axis=1, sort=False )
+        weights_map = {}
+
+        for i, group_id in enumerate(self.group_ids):
+            lv_weight = weight_df.groupby(group_id)[self.weight_columns].sum().sum(axis=1)
+            lv_weight = lv_weight / lv_weight.sum()
+            for i in range(len(lv_weight)):
+                weights_map[self.get_name(lv_weight.index[i])] = np.array([lv_weight.iloc[i]])
+        weights = pd.DataFrame(weights_map).T / len(self.group_ids)
+
+        return weights
+
+    #----------------------------------------------------------------------------
+    def trans_30490_to_42840(self, df, cols, group_ids, dis=False):
+        '''
+        transform 30490 sries to all 42840 series
+        '''
+        series_map = {}
+        for i, group_id in enumerate(group_ids):
+            tr = df.groupby(group_id)[cols].sum()
+            for i in range(len(tr)):
+                series_map[self.get_name(tr.index[i])] = tr.iloc[i].values
+        return pd.DataFrame(series_map).T
+
+    #----------------------------------------------------------------------------
+    def get_rmsse(self, valid_preds) -> pd.Series:
+        '''
+        returns rmsse scores for all 42840 series
+        '''
+        score = ((self.valid_series - valid_preds) ** 2).mean(axis=1)
+        rmsse = (score / self.scale).map(np.sqrt)
+        return rmsse
 
     #----------------------------------------------------------------------------
     def score_submission(self, results, d_col_start = 1886) -> float:
@@ -136,14 +164,15 @@ class WRMSSEEvaluator(object):
 
         valid_preds = pd.concat([self.valid_df[self.id_columns], valid_preds], axis=1, sort=False)
 
-        all_scores = []
-        for i, group_id in enumerate(self.group_ids):
-            lv_scores = self.rmsse(valid_preds.groupby(group_id)[self.valid_target_columns].sum(), i + 1)
-            weight = getattr(self, f'lv{i + 1}_weight')
-            lv_scores = pd.concat([weight, lv_scores], axis=1, sort=False).prod(axis=1)
-            all_scores.append(lv_scores.sum())
+        valid_preds = self.trans_30490_to_42840(valid_preds, 
+                                                self.valid_target_columns, 
+                                                self.group_ids, 
+                                                True)
+        rmsse = self.get_rmsse(valid_preds)
+        contributors = pd.concat([self.weights, rmsse], 
+                                  axis=1, 
+                                  sort=False).prod(axis=1)
 
-        self.all_scores = all_scores
-        score = np.mean(all_scores)
+        score = np.sum(contributors)
         print("WRMSSE Score: " + str(score))
         return score

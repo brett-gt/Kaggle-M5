@@ -65,12 +65,12 @@ def main():
     print(data.columns)
 
     LGB = lgb_wrap.LGB(data)
-    LGB.train_and_predict(data)
+    LGB.train_and_predict()
     final = LGB.make_submission()
 
-    #evaluator = WRMSSEEvaluator()
-    #final = pd.read_csv('submission.csv')
-    #print(evaluator.score_submission(final))
+    print("Running our WRMSEE...")
+    evaluator = WRMSSEEvaluator()
+    print(evaluator.score_submission(final))
 
 
 
@@ -115,6 +115,12 @@ def main():
     #train_data, val_data = pre.split_data(sales_val_data, 30)
 
     #visual.display_train_val(train_data, val_data)
+
+#-------------------------------------------------------------------------------------
+def WRMSSEE_test():
+    evaluator = WRMSSEEvaluator()
+    final = pd.read_csv('submission.csv')
+    print(evaluator.score_submission(final))
 
 
 #-------------------------------------------------------------------------------------
