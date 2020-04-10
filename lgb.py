@@ -66,19 +66,19 @@ class LGB(object):
         #TODO:
         # 'metric':'auc'
         params = {
-            'seed': 236,
             'boosting_type': 'gbdt',
             'metric': 'rmse',
-            'objective': 'poisson',
-            'force_row_wise' : True,
-            'bagging_freq' : 1,            #Freq of iterations on which bagging is perfromed
-            'bagging_seed' : 236,          #Random seed for bagging
-            'sub_row' : 0.75,              #Select part of data for training, used to speed up and deal with overfitting
+            'objective': 'regression',
+            'n_jobs': -1,
+            'seed': 236,
             'learning_rate': 0.075,
-            'num_leaves':128,              #Number of leaves in one tree
-            'min_data_in_leaf':50,         #Min data in one leaf, helps with overfitting
-               #'colsample_bytree': 0.75
-            }      
+            'num_leaves':128,
+            'min_data_in_leaf':50,
+            #'bagging_fraction': 0.75,
+            #'bagging_freq': 10, 
+            #'colsample_bytree': 0.75
+            }
+			
 
         self.model = lgb.train(params,
                                train_set,
